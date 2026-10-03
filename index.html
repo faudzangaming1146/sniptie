@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sniptie - Chat Sama Teman Jauh</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Family Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Scrollbar halus */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ==================== PAGE 1: AUTH & SETUP ONBOARDING ==================== -->
+  <div id="page-auth" class="flex-1 flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+      <!-- Glow decoration -->
+      <div class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Step 1: Login dengan Google -->
+      <div id="step-google" class="space-y-6 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-500/30 mb-2">
+          <i data-lucide="message-square-heart" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2">Sniptie</h1>
+          <p class="text-slate-400 text-sm">Tetap dekat dan terhubung dengan teman jauh kapan saja.</p>
+        </div>
+
+        <button onclick="simulasikanLoginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-800 font-semibold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 border border-slate-200">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Lanjutkan dengan Google
+        </button>
+
+        <p class="text-xs text-slate-500">Dengan mendaftar, kamu menyetujui Ketentuan Layanan Sniptie.</p>
+      </div>
+
+      <!-- Step 2: Form Nama Panggilan (Tampil setelah Login Google) -->
+      <div id="step-name" class="hidden space-y-6">
+        <div class="text-center">
+          <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-xl mb-3">
+            <i data-lucide="user-check" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-1">Buat Nama Tampilan</h2>
+          <p class="text-slate-400 text-sm">Pilih nama panggilan yang akan muncul saat kamu mengobrol.</p>
+        </div>
+
+        <form onsubmit="simpanProfil(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nama Panggilan Kamu</label>
+            <input type="text" id="input-display-name" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+          </div>
+
+          <!-- Preview Info -->
+          <div class="bg-slate-900/40 border border-slate-700/50 rounded-xl p-3 flex items-center gap-3">
+            <img id="preview-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full bg-slate-700">
+            <div>
+              <p id="preview-google-name" class="text-xs text-slate-400">Google Account</p>
+              <p id="preview-google-email" class="text-xs text-slate-500">email@gmail.com</p>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/25">
+            Masuk ke Sniptie
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2: MAIN DASHBOARD & CHAT APP ==================== -->
+  <div id="page-app" class="hidden flex-1 flex h-screen overflow-hidden bg-slate-950">
+
+    <!-- SIDEBAR: Pengguna & Daftar Teman -->
+    <aside class="w-80 border-r border-slate-800 bg-slate-900/70 flex flex-col h-full">
+      
+      <!-- User Profile Header -->
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="relative">
+            <img id="my-avatar" src="" class="w-10 h-10 rounded-full border border-indigo-500/40">
+            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+          </div>
+          <div class="truncate">
+            <h3 id="my-display-name" class="text-sm font-semibold text-white truncate">Nama Display</h3>
+            <p id="my-google-name" class="text-xs text-slate-400 truncate">Google Name</p>
+          </div>
+        </div>
+        <button onclick="logout()" title="Logout" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex p-2 gap-1 bg-slate-950/50 m-3 rounded-xl border border-slate-800">
+        <button id="tab-btn-friends" onclick="switchTab('friends')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition-all">
+          Teman (<span id="count-friends">0</span>)
+        </button>
+        <button id="tab-btn-all" onclick="switchTab('all')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">
+          Semua Akun (<span id="count-all">0</span>)
+        </button>
+      </div>
+
+      <!-- Contact Lists -->
+      <div class="flex-1 overflow-y-auto px-2 space-y-1">
+        <!-- Friends List -->
+        <div id="list-friends" class="space-y-1"></div>
+        <!-- All Users List -->
+        <div id="list-all" class="space-y-1 hidden"></div>
+      </div>
+
+      <!-- App Brand Footer -->
+      <div class="p-3 border-t border-slate-800 text-center">
+        <span class="text-xs font-medium text-slate-500 flex items-center justify-center gap-1">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i> Sniptie Web App
+        </span>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT AREA -->
+    <main class="flex-1 flex flex-col h-full bg-slate-950 relative">
+
+      <!-- Chat Header -->
+      <div id="chat-header" class="p-4 border-b border-slate-800 bg-slate-900/40 backdrop-blur flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img id="chat-target-avatar" src="" class="w-10 h-10 rounded-full border border-slate-700">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="chat-target-display" class="font-bold text-white">Pilih Kontak</h2>
+              <span id="badge-friend-status" class="hidden px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Teman</span>
+            </div>
+            <p id="chat-target-google" class="text-xs text-slate-400">--</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stranger Warning Banner (Peringatan Orang Asing) -->
+      <div id="stranger-warning" class="hidden bg-amber-500/10 border-b border-amber-500/20 p-3 px-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <div>
+            <p class="text-xs font-semibold text-amber-200">Peringatan Orang Asing!</p>
+            <p class="text-xs text-amber-300/80">Pengguna ini belum berada di dalam daftar teman kamu.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="tolakTeman()" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors">
+            Tidak Balas Chat
+          </button>
+          <button onclick="terimaTeman()" class="px-3 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm transition-colors flex items-center gap-1">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Balas & Tambah Teman
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages History Container -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <!-- Message Bubbles will be injected here -->
+      </div>
+
+      <!-- Chat Input Field -->
+      <form id="chat-form" onsubmit="kirimPesan(event)" class="p-4 border-t border-slate-800 bg-slate-900/50 flex items-center gap-3">
+        <input type="text" id="input-message" autocomplete="off" placeholder="Ketik pesan kamu di sini..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center">
+          <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <!-- JavaScript App Logic -->
+  <script>
+    // State Aplikasi
+    let currentUser = null;
+    let selectedUser = null;
+    let friends = []; // Daftar ID Teman
+
+    // Mock Database Pengguna Lain (Simulasi Server/Supabase)
+    const mockUsers = [
+      {
+        id: "usr_1",
+        displayName: "Siti Rahma",
+        googleName: "Siti Rahmawati",
+        googleEmail: "siti.rahma@gmail.com",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
+      },
+      {
+        id: "usr_2",
+        displayName: "Andi Jakarta",
+        googleName: "Andi Wijaya",
+        googleEmail: "andi.wijaya@gmail.com",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
+      },
+      {
+        id: "usr_3",
+        displayName: "Rian Papua",
+        googleName: "Rian Setiawan",
+        googleEmail: "rian.setiawan@gmail.com",
+        avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop"
+      }
+    ];
+
+    // Mock Chat Messages Store
+    let messagesStore = {
+      "usr_1": [
+        { sender: "usr_1", text: "Halo! Kamu apa kabar di sana?", time: "10:15" }
+      ],
+      "usr_2": [
+        { sender: "usr_2", text: "Hei, lama tak jumpa! Nanti kabari ya kalau ke Jakarta.", time: "Yesterday" }
+      ],
+      "usr_3": []
+    };
+
+    // Initialize Lucide Icons
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+    });
+
+    // 1. Simulasi Login Google
+    function simulasikanLoginGoogle() {
+      // Mock data Google Account
+      currentUser = {
+        id: "usr_me_" + Date.now(),
+        googleName: "Akun Google Saya",
+        googleEmail: "pengguna.baru@gmail.com",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"
+      };
+
+      document.getElementById('preview-avatar').src = currentUser.avatar;
+      document.getElementById('preview-google-name').textContent = currentUser.googleName;
+      document.getElementById('preview-google-email').textContent = currentUser.googleEmail;
+
+      document.getElementById('step-google').classList.add('hidden');
+      document.getElementById('step-name').classList.remove('hidden');
+    }
+
+    // 2. Simpan Profil Nama Panggilan & Masuk Dashboard
+    function simpanProfil(e) {
+      e.preventDefault();
+      const displayNameInput = document.getElementById('input-display-name').value.trim();
+      if (!displayNameInput) return;
+
+      currentUser.displayName = displayNameInput;
+
+      // Update Dashboard Header Info
+      document.getElementById('my-avatar').src = currentUser.avatar;
+      document.getElementById('my-display-name').textContent = currentUser.displayName;
+      document.getElementById('my-google-name').textContent = currentUser.googleName;
+
+      // Transition Screen
+      document.getElementById('page-auth').classList.add('hidden');
+      document.getElementById('page-app').classList.remove('hidden');
+
+      renderUserLists();
+      // Auto Select First User
+      selectChatUser(mockUsers[0]);
+    }
+
+    // 3. Render Daftar Kontak & Teman
+    function renderUserLists() {
+      const listAll = document.getElementById('list-all');
+      const listFriends = document.getElementById('list-friends');
+
+      listAll.innerHTML = '';
+      listFriends.innerHTML = '';
+
+      const friendUsers = mockUsers.filter(u => friends.includes(u.id));
+
+      document.getElementById('count-all').textContent = mockUsers.length;
+      document.getElementById('count-friends').textContent = friendUsers.length;
+
+      // Render All Users List
+      mockUsers.forEach(user => {
+        listAll.appendChild(createContactCard(user));
+      });
+
+      // Render Friends List
+      if (friendUsers.length === 0) {
+        listFriends.innerHTML = `
+          <div class="text-center py-8 px-4 text-slate-500">
+            <i data-lucide="user-x" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+            <p class="text-xs">Belum ada teman.</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">Balas pesan dari menu "Semua Akun" untuk menambahkan teman.</p>
+          </div>
+        `;
+        lucide.createIcons();
+      } else {
+        friendUsers.forEach(user => {
+          listFriends.appendChild(createContactCard(user));
+        });
+      }
+    }
+
+    // Helper Card Component
+    function createContactCard(user) {
+      const isSelected = selectedUser && selectedUser.id === user.id;
+      const isFriend = friends.includes(user.id);
+
+      const div = document.createElement('div');
+      div.className = `p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
+        isSelected 
+          ? 'bg-indigo-600/20 border border-indigo-500/30' 
+          : 'hover:bg-slate-800/60 border border-transparent'
+      }`;
+
+      div.onclick = () => selectChatUser(user);
+
+      div.innerHTML = `
+        <div class="flex items-center gap-3 overflow-hidden">
+          <img src="${user.avatar}" class="w-10 h-10 rounded-full object-cover">
+          <div class="truncate">
+            <h4 class="text-sm font-semibold text-white truncate">${user.displayName}</h4>
+            <p class="text-xs text-slate-400 truncate">${user.googleName}</p>
+          </div>
+        </div>
+        ${isFriend ? '<span class="w-2 h-2 bg-emerald-500 rounded-full" title="Teman"></span>' : ''}
+      `;
+      return div;
+    }
+
+    // 4. Pilih Chat User
+    function selectChatUser(user) {
+      selectedUser = user;
+      document.getElementById('chat-target-avatar').src = user.avatar;
+      document.getElementById('chat-target-display').textContent = user.displayName;
+      document.getElementById('chat-target-google').textContent = `${user.googleName} (${user.googleEmail})`;
+
+      const isFriend = friends.includes(user.id);
+      const warningBanner = document.getElementById('stranger-warning');
+      const badgeFriend = document.getElementById('badge-friend-status');
+
+      if (!isFriend) {
+        warningBanner.classList.remove('hidden');
+        badgeFriend.classList.add('hidden');
+      } else {
+        warningBanner.classList.add('hidden');
+        badgeFriend.classList.remove('hidden');
+      }
+
+      renderUserLists();
+      renderMessages();
+    }
+
+    // 5. Render Percakapan
+    function renderMessages() {
+      const container = document.getElementById('messages-container');
+      container.innerHTML = '';
+
+      if (!selectedUser) return;
+
+      const chatHistory = messagesStore[selectedUser.id] || [];
+
+      if (chatHistory.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center text-slate-500">
+            <i data-lucide="message-circle" class="w-10 h-10 mb-2 opacity-30"></i>
+            <p class="text-sm">Belum ada percakapan dengan ${selectedUser.displayName}.</p>
+            <p class="text-xs text-slate-600">Ketik pesan di bawah untuk memulai!</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      chatHistory.forEach(msg => {
+        const isMe = msg.sender === 'me';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+
+        msgDiv.innerHTML = `
+          <div class="max-w-[70%] ${
+            isMe 
+              ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none' 
+              : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-none border border-slate-700/60'
+          } p-3.5 shadow-md">
+            <p class="text-sm leading-relaxed">${msg.text}</p>
+            <span class="text-[10px] ${isMe ? 'text-indigo-200' : 'text-slate-400'} block text-right mt-1">${msg.time}</span>
+          </div>
+        `;
+        container.appendChild(msgDiv);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 6. Kirim Pesan
+    function kirimPesan(e) {
+      e.preventDefault();
+      const input = document.getElementById('input-message');
+      const text = input.value.trim();
+      if (!text || !selectedUser) return;
+
+      if (!messagesStore[selectedUser.id]) {
+        messagesStore[selectedUser.id] = [];
+      }
+
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+      messagesStore[selectedUser.id].push({
+        sender: 'me',
+        text: text,
+        time: timeStr
+      });
+
+      input.value = '';
+      renderMessages();
+    }
+
+    // 7. Aksi Peringatan Orang Asing
+    function terimaTeman() {
+      if (!selectedUser) return;
+      if (!friends.includes(selectedUser.id)) {
+        friends.push(selectedUser.id);
+      }
+      selectChatUser(selectedUser);
+      switchTab('friends');
+    }
+
+    function tolakTeman() {
+      alert(`Kamu memilih tidak membalas chat. ${selectedUser.displayName} tetap berada dalam kategori orang asing.`);
+    }
+
+    // Switch Tab Kontak
+    function switchTab(tab) {
+      const btnFriends = document.getElementById('tab-btn-friends');
+      const btnAll = document.getElementById('tab-btn-all');
+      const listFriends = document.getElementById('list-friends');
+      const listAll = document.getElementById('list-all');
+
+      if (tab === 'friends') {
+        btnFriends.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition-all';
+        btnAll.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all';
+        listFriends.classList.remove('hidden');
+        listAll.classList.add('hidden');
+      } else {
+        btnAll.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition-all';
+        btnFriends.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all';
+        listAll.classList.remove('hidden');
+        listFriends.classList.add('hidden');
+      }
+    }
+
+    // Logout Function
+    function logout() {
+      currentUser = null;
+      selectedUser = null;
+      friends = [];
+      document.getElementById('input-display-name').value = '';
+      document.getElementById('step-name').classList.add('hidden');
+      document.getElementById('step-google').classList.remove('hidden');
+      document.getElementById('page-app').classList.add('hidden');
+      document.getElementById('page-auth').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
