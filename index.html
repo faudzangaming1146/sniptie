@@ -6,7 +6,7 @@
   <title>Sniptie - Chat Realtime</title>
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- TailWind CSS untuk Tampilan Modern -->
+  <!-- TailWind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white h-screen flex flex-col font-sans">
@@ -19,21 +19,21 @@
       <!-- User Header -->
       <div class="p-4 border-b border-slate-700 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img id="my-avatar" class="w-10 h-10 rounded-full bg-slate-600" src="" alt="Avatar">
-          <div>
-            <h2 id="my-name" class="font-bold text-sm">Loading...</h2>
-            <p id="my-email" class="text-xs text-slate-400"></p>
+          <img id="my-avatar" class="w-10 h-10 rounded-full bg-slate-600 object-cover" src="https://via.placeholder.com/40" alt="Avatar">
+          <div class="overflow-hidden">
+            <h2 id="my-name" class="font-bold text-sm truncate">Memuat...</h2>
+            <p id="my-email" class="text-xs text-slate-400 truncate"></p>
           </div>
         </div>
-        <button onclick="logout()" class="text-xs bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded transition">Logout</button>
+        <button onclick="logout()" class="text-xs bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded transition shrink-0">Logout</button>
       </div>
 
-      <!-- User List (Tambah Teman & Chat) -->
+      <!-- User List Header -->
       <div class="p-3 bg-slate-800/50 border-b border-slate-700">
         <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Daftar Pengguna / Teman</h3>
       </div>
       <div id="users-list" class="flex-1 overflow-y-auto divide-y divide-slate-700/50">
-        <!-- List pengguna akan dimuat secara dinamis -->
+        <!-- List pengguna dimuat otomatis -->
       </div>
     </div>
 
@@ -75,14 +75,15 @@
 
   </div>
 
-  <!-- LOGIN MODAL (Tampil jika belum login) -->
+  <!-- LOGIN MODAL -->
   <div id="login-modal" class="fixed inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-50">
     <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 w-full max-w-md text-center shadow-2xl">
       <h1 class="text-3xl font-extrabold text-purple-400 mb-2">Sniptie</h1>
       <p class="text-slate-400 mb-6 text-sm">Masuk untuk mengobrol secara realtime dengan teman kamu.</p>
       <button 
+        type="button"
         onclick="loginWithGoogle()" 
-        class="w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition shadow-md"
+        class="w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition shadow-md active:scale-95"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -96,16 +97,15 @@
   </div>
 
   <script>
-    // --- KONFIGURASI SUPABASE ---
+    // --- KONFIGURASI SUPABASE LENGKAP ---
     const SUPABASE_URL = 'https://mnixgvsglsviefzvimnd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_ybxqRacRWJmy5ti4wnQsLA_Yrxcr8vp'; // Ganti dengan anon/publishable key lengkap kamu
+    const SUPABASE_ANON_KEY = 'sb_publishable_ybxqRacRWJmy5ti4wnQsLA_Yrxcr8vp';
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
     let selectedUser = null;
 
-    // --- INIT APP ---
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -121,12 +121,18 @@
       }
     }
 
-    // --- AUTHENTICATION ---
+    // --- FUNGSI LOGIN GOOGLE ---
     async function loginWithGoogle() {
-      await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin }
+        options: { 
+          redirectTo: window.location.origin 
+        }
       });
+
+      if (error) {
+        alert("Gagal Login dengan Google: " + error.message);
+      }
     }
 
     async function logout() {
@@ -134,16 +140,13 @@
       window.location.reload();
     }
 
-    // --- SAVE PROFILE TO SUPABASE ---
     async function saveUserProfile(user) {
-      const profileData = {
+      await supabase.from('profiles').upsert({
         id: user.id,
         google_email: user.email,
         google_name: user.user_metadata.full_name || user.email.split('@')[0],
         avatar_url: user.user_metadata.avatar_url || ''
-      };
-
-      await supabase.from('profiles').upsert(profileData);
+      });
     }
 
     function setupUserDataUI() {
@@ -152,14 +155,13 @@
       document.getElementById('my-avatar').src = currentUser.user_metadata.avatar_url || 'https://via.placeholder.com/40';
     }
 
-    // --- LOAD USERS LIST ---
     async function loadUsers() {
       const { data: users, error } = await supabase
         .from('profiles')
         .select('*')
-        .neq('id', currentUser.id); // Jangan tampilkan diri sendiri
+        .neq('id', currentUser.id);
 
-      if (error) return console.error('Error loading users:', error);
+      if (error) return console.error('Error load users:', error);
 
       const listEl = document.getElementById('users-list');
       listEl.innerHTML = '';
@@ -175,7 +177,7 @@
         item.onclick = () => selectUser(u);
         
         item.innerHTML = `
-          <img class="w-9 h-9 rounded-full bg-slate-600" src="${u.avatar_url || 'https://via.placeholder.com/40'}" alt="Avatar">
+          <img class="w-9 h-9 rounded-full bg-slate-600 object-cover" src="${u.avatar_url || 'https://via.placeholder.com/40'}" alt="Avatar">
           <div class="flex-1 min-w-0">
             <h4 class="font-medium text-sm text-slate-200 truncate">${u.google_name || 'Pengguna'}</h4>
             <p class="text-xs text-slate-400 truncate">${u.google_email}</p>
@@ -185,21 +187,19 @@
       });
     }
 
-    // --- SELECT CHAT USER ---
     async function selectUser(user) {
       selectedUser = user;
       document.getElementById('active-user-name').textContent = user.google_name || user.google_email;
       document.getElementById('active-user-status').textContent = user.google_email;
-      document.getElementById('active-user-avatar').innerHTML = `<img class="w-10 h-10 rounded-full" src="${user.avatar_url || 'https://via.placeholder.com/40'}">`;
+      document.getElementById('active-user-avatar').innerHTML = `<img class="w-10 h-10 rounded-full object-cover" src="${user.avatar_url || 'https://via.placeholder.com/40'}">`;
       
       document.getElementById('message-input').disabled = false;
       document.getElementById('send-btn').disabled = false;
 
-      await loadUsers(); // Highlight selected user
+      await loadUsers();
       await loadMessages();
     }
 
-    // --- LOAD MESSAGES ---
     async function loadMessages() {
       if (!selectedUser) return;
 
@@ -209,7 +209,7 @@
         .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${currentUser.id})`)
         .order('created_at', { ascending: true });
 
-      if (error) return console.error('Error loading messages:', error);
+      if (error) return console.error('Error load messages:', error);
 
       const container = document.getElementById('messages-container');
       container.innerHTML = '';
@@ -218,7 +218,6 @@
       scrollToBottom();
     }
 
-    // --- SEND MESSAGE ---
     async function sendMessage(e) {
       e.preventDefault();
       const input = document.getElementById('message-input');
@@ -228,17 +227,15 @@
 
       input.value = '';
 
-      const newMessage = {
+      const { error } = await supabase.from('messages').insert([{
         sender_id: currentUser.id,
         receiver_id: selectedUser.id,
         content: text
-      };
+      }]);
 
-      const { error } = await supabase.from('messages').insert([newMessage]);
-      if (error) console.error('Gagal mengirim pesan:', error);
+      if (error) alert('Gagal kirim pesan: ' + error.message);
     }
 
-    // --- RENDER SINGLE MESSAGE TO UI ---
     function renderSingleMessage(msg) {
       const container = document.getElementById('messages-container');
       const isMe = msg.sender_id === currentUser.id;
@@ -267,14 +264,11 @@
       });
     }
 
-    // --- REALTIME SUBSCRIPTIONS (Sangat Penting!) ---
     function setupRealtimeSubscriptions() {
-      // 1. Dengarkan Pesan Baru (Tanpa Reload)
       supabase
         .channel('public:messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
           const newMsg = payload.new;
-          // Tampilkan jika pesan ini milik chat yang sedang aktif dibuka
           if (selectedUser && 
              ((newMsg.sender_id === currentUser.id && newMsg.receiver_id === selectedUser.id) ||
               (newMsg.sender_id === selectedUser.id && newMsg.receiver_id === currentUser.id))) {
@@ -283,7 +277,6 @@
         })
         .subscribe();
 
-      // 2. Dengarkan Pengguna Baru yang Mendaftar (Tanpa Reload)
       supabase
         .channel('public:profiles')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
@@ -292,7 +285,7 @@
         .subscribe();
     }
 
-    // Jalankan Aplikasi
+    // Jalankan aplikasi
     init();
   </script>
 </body>
