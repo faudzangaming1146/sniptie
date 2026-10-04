@@ -10,13 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
-    /* Scrollbar halus */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
@@ -38,7 +38,7 @@
           <p class="text-slate-400 text-sm">Tetap dekat dan terhubung dengan teman jauh kapan saja.</p>
         </div>
 
-        <button onclick="simulasikanLoginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-800 font-semibold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 border border-slate-200">
+        <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-800 font-semibold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 border border-slate-200">
           <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -51,7 +51,7 @@
         <p class="text-xs text-slate-500">Dengan mendaftar, kamu menyetujui Ketentuan Layanan Sniptie.</p>
       </div>
 
-      <!-- Step 2: Form Nama Panggilan (Tampil setelah Login Google) -->
+      <!-- Step 2: Form Nama Panggilan (Tampil jika Profil Baru) -->
       <div id="step-name" class="hidden space-y-6">
         <div class="text-center">
           <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-xl mb-3">
@@ -70,13 +70,13 @@
           <!-- Preview Info -->
           <div class="bg-slate-900/40 border border-slate-700/50 rounded-xl p-3 flex items-center gap-3">
             <img id="preview-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full bg-slate-700">
-            <div>
-              <p id="preview-google-name" class="text-xs text-slate-400">Google Account</p>
-              <p id="preview-google-email" class="text-xs text-slate-500">email@gmail.com</p>
+            <div class="truncate">
+              <p id="preview-google-name" class="text-xs font-semibold text-slate-300 truncate">Google Account</p>
+              <p id="preview-google-email" class="text-xs text-slate-500 truncate">email@gmail.com</p>
             </div>
           </div>
 
-          <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/25">
+          <button type="submit" id="btn-save-profile" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/25">
             Masuk ke Sniptie
           </button>
         </form>
@@ -93,8 +93,8 @@
       <!-- User Profile Header -->
       <div class="p-4 border-b border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-3 overflow-hidden">
-          <div class="relative">
-            <img id="my-avatar" src="" class="w-10 h-10 rounded-full border border-indigo-500/40">
+          <div class="relative shrink-0">
+            <img id="my-avatar" src="" class="w-10 h-10 rounded-full border border-indigo-500/40 object-cover">
             <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
           </div>
           <div class="truncate">
@@ -119,9 +119,7 @@
 
       <!-- Contact Lists -->
       <div class="flex-1 overflow-y-auto px-2 space-y-1">
-        <!-- Friends List -->
         <div id="list-friends" class="space-y-1"></div>
-        <!-- All Users List -->
         <div id="list-all" class="space-y-1 hidden"></div>
       </div>
 
@@ -139,13 +137,13 @@
       <!-- Chat Header -->
       <div id="chat-header" class="p-4 border-b border-slate-800 bg-slate-900/40 backdrop-blur flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img id="chat-target-avatar" src="" class="w-10 h-10 rounded-full border border-slate-700">
+          <img id="chat-target-avatar" src="https://via.placeholder.com/100" class="w-10 h-10 rounded-full border border-slate-700 object-cover">
           <div>
             <div class="flex items-center gap-2">
               <h2 id="chat-target-display" class="font-bold text-white">Pilih Kontak</h2>
               <span id="badge-friend-status" class="hidden px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Teman</span>
             </div>
-            <p id="chat-target-google" class="text-xs text-slate-400">--</p>
+            <p id="chat-target-google" class="text-xs text-slate-400">Pilih salah satu teman untuk memulai obrolan</p>
           </div>
         </div>
       </div>
@@ -170,9 +168,7 @@
       </div>
 
       <!-- Messages History Container -->
-      <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4">
-        <!-- Message Bubbles will be injected here -->
-      </div>
+      <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
       <!-- Chat Input Field -->
       <form id="chat-form" onsubmit="kirimPesan(event)" class="p-4 border-t border-slate-800 bg-slate-900/50 flex items-center gap-3">
@@ -184,95 +180,142 @@
     </main>
   </div>
 
-  <!-- JavaScript App Logic -->
+  <!-- JavaScript Logic dengan Integrasi Supabase -->
   <script>
-    // State Aplikasi
+    // =========================================================================
+    // ⚙️ GANTI 2 BARIS INI DENGAN DATA DARI SUPABASE DASHBOARD KAMU ⚙️
+    // =========================================================================
+    const SUPABASE_URL = 'https://mnixgvsglsviefzvimnd.supabase.co/rest/v1/'; // Contoh Project URL kamu
+    const SUPABASE_ANON_KEY = 'sb_publishable_ybxqRacRWJmy5ti4wnQsLA_Yrxcr8vp';
+    // =========================================================================
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // App State
     let currentUser = null;
     let selectedUser = null;
-    let friends = []; // Daftar ID Teman
+    let allUsers = [];
+    let friendIds = [];
+    let messagesList = [];
 
-    // Mock Database Pengguna Lain (Simulasi Server/Supabase)
-    const mockUsers = [
-      {
-        id: "usr_1",
-        displayName: "Siti Rahma",
-        googleName: "Siti Rahmawati",
-        googleEmail: "siti.rahma@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
-      },
-      {
-        id: "usr_2",
-        displayName: "Andi Jakarta",
-        googleName: "Andi Wijaya",
-        googleEmail: "andi.wijaya@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
-      },
-      {
-        id: "usr_3",
-        displayName: "Rian Papua",
-        googleName: "Rian Setiawan",
-        googleEmail: "rian.setiawan@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop"
-      }
-    ];
-
-    // Mock Chat Messages Store
-    let messagesStore = {
-      "usr_1": [
-        { sender: "usr_1", text: "Halo! Kamu apa kabar di sana?", time: "10:15" }
-      ],
-      "usr_2": [
-        { sender: "usr_2", text: "Hei, lama tak jumpa! Nanti kabari ya kalau ke Jakarta.", time: "Yesterday" }
-      ],
-      "usr_3": []
-    };
-
-    // Initialize Lucide Icons
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       lucide.createIcons();
+      await checkAuthSession();
     });
 
-    // 1. Simulasi Login Google
-    function simulasikanLoginGoogle() {
-      // Mock data Google Account
-      currentUser = {
-        id: "usr_me_" + Date.now(),
-        googleName: "Akun Google Saya",
-        googleEmail: "pengguna.baru@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"
-      };
+    // 1. Cek Sesi Auth saat Halaman Dibuka
+    async function checkAuthSession() {
+      const { data: { session }, error } = await _supabase.auth.getSession();
+      
+      if (session) {
+        const user = session.user;
+        
+        // Ambil Profil Pengguna dari Database Supabase
+        const { data: profile } = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-      document.getElementById('preview-avatar').src = currentUser.avatar;
-      document.getElementById('preview-google-name').textContent = currentUser.googleName;
-      document.getElementById('preview-google-email').textContent = currentUser.googleEmail;
+        currentUser = {
+          id: user.id,
+          googleName: user.user_metadata.full_name || 'Akun Google',
+          googleEmail: user.email,
+          avatar: user.user_metadata.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+          displayName: profile ? profile.display_name : null
+        };
 
-      document.getElementById('step-google').classList.add('hidden');
-      document.getElementById('step-name').classList.remove('hidden');
+        if (profile && profile.display_name) {
+          // Jika Profil sudah ada -> Masuk ke Aplikasi Utama
+          launchApp();
+        } else {
+          // Jika Pengguna Baru -> Tampilkan Form Input Nama Tampilan
+          document.getElementById('preview-avatar').src = currentUser.avatar;
+          document.getElementById('preview-google-name').textContent = currentUser.googleName;
+          document.getElementById('preview-google-email').textContent = currentUser.googleEmail;
+
+          document.getElementById('step-google').classList.add('hidden');
+          document.getElementById('step-name').classList.remove('hidden');
+        }
+      }
     }
 
-    // 2. Simpan Profil Nama Panggilan & Masuk Dashboard
-    function simpanProfil(e) {
+    // 2. Login Google OAuth Real Via Supabase
+    async function loginWithGoogle() {
+      const { error } = await _supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) alert('Gagal Login: ' + error.message);
+    }
+
+    // 3. Simpan Profil Nama Panggilan ke Supabase Database
+    async function simpanProfil(e) {
       e.preventDefault();
       const displayNameInput = document.getElementById('input-display-name').value.trim();
       if (!displayNameInput) return;
 
-      currentUser.displayName = displayNameInput;
+      const btn = document.getElementById('btn-save-profile');
+      btn.textContent = "Menyimpan...";
+      btn.disabled = true;
 
-      // Update Dashboard Header Info
+      const { error } = await _supabase.from('profiles').upsert({
+        id: currentUser.id,
+        display_name: displayNameInput,
+        google_name: currentUser.googleName,
+        google_email: currentUser.googleEmail,
+        avatar_url: currentUser.avatar
+      });
+
+      if (error) {
+        alert('Gagal menyimpan profil: ' + error.message);
+        btn.textContent = "Masuk ke Sniptie";
+        btn.disabled = false;
+        return;
+      }
+
+      currentUser.displayName = displayNameInput;
+      launchApp();
+    }
+
+    // 4. Buka Aplikasi Utama
+    async function launchApp() {
       document.getElementById('my-avatar').src = currentUser.avatar;
       document.getElementById('my-display-name').textContent = currentUser.displayName;
       document.getElementById('my-google-name').textContent = currentUser.googleName;
 
-      // Transition Screen
       document.getElementById('page-auth').classList.add('hidden');
       document.getElementById('page-app').classList.remove('hidden');
 
-      renderUserLists();
-      // Auto Select First User
-      selectChatUser(mockUsers[0]);
+      await loadContactsAndFriends();
+      setupRealtimeSubscriptions();
     }
 
-    // 3. Render Daftar Kontak & Teman
+    // 5. Muat Kontak & Daftar Teman dari Supabase
+    async function loadContactsAndFriends() {
+      // Ambil semua pengguna lain
+      const { data: users } = await _supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', currentUser.id);
+
+      allUsers = users || [];
+
+      // Ambil daftar teman
+      const { data: friends } = await _supabase
+        .from('friendships')
+        .select('friend_id, user_id')
+        .or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`)
+        .eq('status', 'accepted');
+
+      friendIds = (friends || []).map(f => f.user_id === currentUser.id ? f.friend_id : f.user_id);
+
+      renderUserLists();
+    }
+
+    // 6. Render Sidebar List
     function renderUserLists() {
       const listAll = document.getElementById('list-all');
       const listFriends = document.getElementById('list-friends');
@@ -280,117 +323,107 @@
       listAll.innerHTML = '';
       listFriends.innerHTML = '';
 
-      const friendUsers = mockUsers.filter(u => friends.includes(u.id));
+      const friendUsers = allUsers.filter(u => friendIds.includes(u.id));
 
-      document.getElementById('count-all').textContent = mockUsers.length;
+      document.getElementById('count-all').textContent = allUsers.length;
       document.getElementById('count-friends').textContent = friendUsers.length;
 
-      // Render All Users List
-      mockUsers.forEach(user => {
-        listAll.appendChild(createContactCard(user));
-      });
+      allUsers.forEach(user => listAll.appendChild(createContactCard(user)));
 
-      // Render Friends List
       if (friendUsers.length === 0) {
         listFriends.innerHTML = `
           <div class="text-center py-8 px-4 text-slate-500">
             <i data-lucide="user-x" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
             <p class="text-xs">Belum ada teman.</p>
-            <p class="text-[11px] text-slate-600 mt-0.5">Balas pesan dari menu "Semua Akun" untuk menambahkan teman.</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">Balas pesan dari menu "Semua Akun" untuk menambah teman.</p>
           </div>
         `;
         lucide.createIcons();
       } else {
-        friendUsers.forEach(user => {
-          listFriends.appendChild(createContactCard(user));
-        });
+        friendUsers.forEach(user => listFriends.appendChild(createContactCard(user)));
       }
     }
 
-    // Helper Card Component
     function createContactCard(user) {
       const isSelected = selectedUser && selectedUser.id === user.id;
-      const isFriend = friends.includes(user.id);
+      const isFriend = friendIds.includes(user.id);
 
       const div = document.createElement('div');
       div.className = `p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between ${
-        isSelected 
-          ? 'bg-indigo-600/20 border border-indigo-500/30' 
-          : 'hover:bg-slate-800/60 border border-transparent'
+        isSelected ? 'bg-indigo-600/20 border border-indigo-500/30' : 'hover:bg-slate-800/60 border border-transparent'
       }`;
 
       div.onclick = () => selectChatUser(user);
-
       div.innerHTML = `
         <div class="flex items-center gap-3 overflow-hidden">
-          <img src="${user.avatar}" class="w-10 h-10 rounded-full object-cover">
+          <img src="${user.avatar_url || 'https://via.placeholder.com/100'}" class="w-10 h-10 rounded-full object-cover shrink-0">
           <div class="truncate">
-            <h4 class="text-sm font-semibold text-white truncate">${user.displayName}</h4>
-            <p class="text-xs text-slate-400 truncate">${user.googleName}</p>
+            <h4 class="text-sm font-semibold text-white truncate">${user.display_name}</h4>
+            <p class="text-xs text-slate-400 truncate">${user.google_name}</p>
           </div>
         </div>
-        ${isFriend ? '<span class="w-2 h-2 bg-emerald-500 rounded-full" title="Teman"></span>' : ''}
+        ${isFriend ? '<span class="w-2 h-2 bg-emerald-500 rounded-full shrink-0" title="Teman"></span>' : ''}
       `;
       return div;
     }
 
-    // 4. Pilih Chat User
-    function selectChatUser(user) {
+    // 7. Pilih Teman & Load Pesan Realtime
+    async function selectChatUser(user) {
       selectedUser = user;
-      document.getElementById('chat-target-avatar').src = user.avatar;
-      document.getElementById('chat-target-display').textContent = user.displayName;
-      document.getElementById('chat-target-google').textContent = `${user.googleName} (${user.googleEmail})`;
+      document.getElementById('chat-target-avatar').src = user.avatar_url || 'https://via.placeholder.com/100';
+      document.getElementById('chat-target-display').textContent = user.display_name;
+      document.getElementById('chat-target-google').textContent = `${user.google_name} (${user.google_email})`;
 
-      const isFriend = friends.includes(user.id);
-      const warningBanner = document.getElementById('stranger-warning');
-      const badgeFriend = document.getElementById('badge-friend-status');
-
-      if (!isFriend) {
-        warningBanner.classList.remove('hidden');
-        badgeFriend.classList.add('hidden');
-      } else {
-        warningBanner.classList.add('hidden');
-        badgeFriend.classList.remove('hidden');
-      }
+      const isFriend = friendIds.includes(user.id);
+      document.getElementById('stranger-warning').classList.toggle('hidden', isFriend);
+      document.getElementById('badge-friend-status').classList.toggle('hidden', !isFriend);
 
       renderUserLists();
+      await fetchMessages();
+    }
+
+    // 8. Ambil Pesan dari Supabase
+    async function fetchMessages() {
+      if (!selectedUser) return;
+
+      const { data: messages } = await _supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${currentUser.id})`)
+        .order('created_at', { ascending: true });
+
+      messagesList = messages || [];
       renderMessages();
     }
 
-    // 5. Render Percakapan
     function renderMessages() {
       const container = document.getElementById('messages-container');
       container.innerHTML = '';
 
-      if (!selectedUser) return;
-
-      const chatHistory = messagesStore[selectedUser.id] || [];
-
-      if (chatHistory.length === 0) {
+      if (messagesList.length === 0) {
         container.innerHTML = `
           <div class="h-full flex flex-col items-center justify-center text-center text-slate-500">
             <i data-lucide="message-circle" class="w-10 h-10 mb-2 opacity-30"></i>
-            <p class="text-sm">Belum ada percakapan dengan ${selectedUser.displayName}.</p>
-            <p class="text-xs text-slate-600">Ketik pesan di bawah untuk memulai!</p>
+            <p class="text-sm">Belum ada percakapan. Kirim pesan untuk memulai!</p>
           </div>
         `;
         lucide.createIcons();
         return;
       }
 
-      chatHistory.forEach(msg => {
-        const isMe = msg.sender === 'me';
+      messagesList.forEach(msg => {
+        const isMe = msg.sender_id === currentUser.id;
         const msgDiv = document.createElement('div');
         msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
 
+        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         msgDiv.innerHTML = `
           <div class="max-w-[70%] ${
-            isMe 
-              ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none' 
-              : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-none border border-slate-700/60'
+            isMe ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-none border border-slate-700/60'
           } p-3.5 shadow-md">
-            <p class="text-sm leading-relaxed">${msg.text}</p>
-            <span class="text-[10px] ${isMe ? 'text-indigo-200' : 'text-slate-400'} block text-right mt-1">${msg.time}</span>
+            <p class="text-sm leading-relaxed">${msg.content}</p>
+            <span class="text-[10px] ${isMe ? 'text-indigo-200' : 'text-slate-400'} block text-right mt-1">${time}</span>
           </div>
         `;
         container.appendChild(msgDiv);
@@ -399,45 +432,53 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // 6. Kirim Pesan
-    function kirimPesan(e) {
+    // 9. Kirim Pesan ke Supabase
+    async function kirimPesan(e) {
       e.preventDefault();
       const input = document.getElementById('input-message');
       const text = input.value.trim();
       if (!text || !selectedUser) return;
 
-      if (!messagesStore[selectedUser.id]) {
-        messagesStore[selectedUser.id] = [];
-      }
+      input.value = '';
 
-      const now = new Date();
-      const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-      messagesStore[selectedUser.id].push({
-        sender: 'me',
-        text: text,
-        time: timeStr
+      await _supabase.from('messages').insert({
+        sender_id: currentUser.id,
+        receiver_id: selectedUser.id,
+        content: text
       });
 
-      input.value = '';
-      renderMessages();
+      await fetchMessages();
     }
 
-    // 7. Aksi Peringatan Orang Asing
-    function terimaTeman() {
+    // 10. Terima Orang Asing Jadi Teman
+    async function terimaTeman() {
       if (!selectedUser) return;
-      if (!friends.includes(selectedUser.id)) {
-        friends.push(selectedUser.id);
-      }
+
+      await _supabase.from('friendships').insert([
+        { user_id: currentUser.id, friend_id: selectedUser.id, status: 'accepted' },
+        { user_id: selectedUser.id, friend_id: currentUser.id, status: 'accepted' }
+      ]);
+
+      await loadContactsAndFriends();
       selectChatUser(selectedUser);
-      switchTab('friends');
     }
 
     function tolakTeman() {
-      alert(`Kamu memilih tidak membalas chat. ${selectedUser.displayName} tetap berada dalam kategori orang asing.`);
+      alert(`Kamu memilih tidak membalas chat. ${selectedUser.display_name} tetap menjadi orang asing.`);
     }
 
-    // Switch Tab Kontak
+    // Live Realtime Subscription
+    function setupRealtimeSubscriptions() {
+      _supabase
+        .channel('public:messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          if (selectedUser && (payload.new.sender_id === selectedUser.id || payload.new.receiver_id === selectedUser.id)) {
+            fetchMessages();
+          }
+        })
+        .subscribe();
+    }
+
     function switchTab(tab) {
       const btnFriends = document.getElementById('tab-btn-friends');
       const btnAll = document.getElementById('tab-btn-all');
@@ -457,16 +498,9 @@
       }
     }
 
-    // Logout Function
-    function logout() {
-      currentUser = null;
-      selectedUser = null;
-      friends = [];
-      document.getElementById('input-display-name').value = '';
-      document.getElementById('step-name').classList.add('hidden');
-      document.getElementById('step-google').classList.remove('hidden');
-      document.getElementById('page-app').classList.add('hidden');
-      document.getElementById('page-auth').classList.remove('hidden');
+    async function logout() {
+      await _supabase.auth.signOut();
+      window.location.reload();
     }
   </script>
 </body>
